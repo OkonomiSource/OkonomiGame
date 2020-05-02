@@ -1,83 +1,59 @@
 #include"BackGround.h"
 
-// 親クラスのコンストラクタ
+// コンストラクタ
 CBackGround::CBackGround()
 {
 
 }
 
-// 親クラスのデストラクタ
+CBackGround::CBackGround(unsigned int uiBG)
+{
+	SetMapChips(uiBG);
+}
+
+// デストラクタ
 CBackGround::~CBackGround()
 {
-
-}
-
-
-// 移動画面の背景1
-CBackGround_1::CBackGround_1()
-{
-	// マップチップ設定用関数を実行する
-	this->SetMapChips();
-}
-
-CBackGround_1::~CBackGround_1()
-{
-
-}
-
-void CBackGround_1::SetMapChips()
-{
-	// 縦一列を設定
 	for (int i = 0; i < BG_Y_MAX; i++)
 	{
-		// 横一列を設定
 		for (int j = 0; j < BG_X_MAX; j++) {
-			this->iMapchips_Bottom[i][j] = LoadGraph("image/Mapchip/640x480/Splitted Image 0-4.png");
+			DeleteGraph(iMapchips_Bottom[i][j]);
 		}
 	}
 }
 
-void CBackGround_1::DrawBackGround()
+void CBackGround::SetMapChips(unsigned int uiBG)
 {
-	// 縦の繰り返し
-	for (int i = 0; i < BG_Y_MAX; i++)
+	switch (uiBG)
 	{
-		// 横一列を設定
-		for (int j = 0; j < BG_X_MAX; j++) {
-			DrawGraph(j * 32, i * 32, this->iMapchips_Bottom[i][j],TRUE);
+	case GROUND:
+		// 縦一列を設定
+		for (int i = 0; i < BG_Y_MAX; i++)
+		{
+			// 横一列を設定
+			for (int j = 0; j < BG_X_MAX; j++) {
+				this->iMapchips_Bottom[i][j] = LoadGraph("image/Mapchip/640x480/pipo-map001_at-sabaku/04.png");
+			}
 		}
-	}
-
-
-}
-
-// 移動画面の背景2
-CBackGround_2::CBackGround_2()
-{
-	// マップチップ設定用関数を実行する
-	this->SetMapChips();
-}
-
-CBackGround_2::~CBackGround_2()
-{
-
-}
-
-void CBackGround_1::SetMapChips()
-{
-	// 縦一列を設定
-	for (int i = 0; i < BG_Y_MAX; i++)
-	{
-		// 横一列を設定
-		for (int j = 0; j < BG_X_MAX; j++) {
-			this->iMapchips_Bottom[i][j] = LoadGraph("image/Mapchip/640x480/Splitted Image 0-4.png");
+		break;
+	case RIVER:
+		// 縦一列を設定
+		for (int i = 0; i < BG_Y_MAX; i++)
+		{
+			// 横一列を設定
+			for (int j = 0; j < BG_X_MAX; j++) {
+				this->iMapchips_Bottom[i][j] = LoadGraph("image/Mapchip/640x480/pipo-map001_at-umi/04.png");
+			}
 		}
+		break;
+
+	default:
+		break;
 	}
 }
 
-void CBackGround_1::DrawBackGround()
+void CBackGround::DrawBackGround()
 {
-	// 縦の繰り返し
 	for (int i = 0; i < BG_Y_MAX; i++)
 	{
 		// 横一列を設定

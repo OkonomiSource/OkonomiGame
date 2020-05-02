@@ -7,6 +7,9 @@
 
 #define DEFAULT_FONT_SIZE 18
 
+// グローバル変数---------------------------------------------------
+int iDefaultfontHandle = 0;
+
 // プログラムは winmain から
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR IpCmdLine, int nCmdShow)
 {
@@ -42,17 +45,11 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR IpCmdLine
 	AddFontResourceEx("ロゴたいぷゴシック.otf", FR_PRIVATE, NULL);
 	
 	// 読み込んだ.otfファイル内のフォント名、フォントサイズ フォントの太さ、フォントのタイプ
-	int iDefaultfontHandle = CreateFontToHandle("07ロゴたいぷゴシック7", DEFAULT_FONT_SIZE, 1, DX_FONTTYPE_NORMAL, DX_CHARSET_DEFAULT);
+	iDefaultfontHandle = CreateFontToHandle("07ロゴたいぷゴシック7", DEFAULT_FONT_SIZE, 1, DX_FONTTYPE_NORMAL, DX_CHARSET_DEFAULT);
 
 	// 実体の生成
 	// 画面クラス
 	CMode* Scene = new CMode();
-
-	// 背景クラス
-	CBackGround_1* BG1 = new CBackGround_1();
-
-	// フォントの設定情報を渡してあげる
-	Scene->SetFont(iDefaultfontHandle);
 
 	int a = GetJoypadNum();
 	printfDx("%d",a);
@@ -64,7 +61,6 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR IpCmdLine
 		// キーの入力状態を走査する
 		// 描画--------------------------------------------------------------------
 
-		BG1->DrawBackGround();
 		Scene->Run();
 
 

@@ -1,6 +1,5 @@
 #pragma once
 #include"Character.h"
-#define MAX_PARTY_MEM 4
 
 // パーティクラス
 class CParty

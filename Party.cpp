@@ -13,7 +13,7 @@ CParty::~CParty()
 // メンバーを設定する
 // TRUE:	設定成功
 // FALSE:	設定失敗
-bool CParty::SetMember(unsigned int uiNum ,unsigned int iChara)
+bool CParty::SetMember(unsigned int uiNum ,unsigned int uiChara)
 {
 	// パーティ人数は最大MAX_PARTY_MEMのため、
 	// 例えばMAX_PARTY_MEM 4であれば[0]～[3]までしか設定しない。
@@ -26,7 +26,7 @@ bool CParty::SetMember(unsigned int uiNum ,unsigned int iChara)
 	else
 	{
 		// 指定の場所にキャラ情報を設定して
-		aCMember[uiNum].SetCharacterInfo(iChara);
+		aCMember[uiNum].SetCharacterInfo(uiChara);
 
 		// キャラにパーティ内番号を設定
 		aCMember[uiNum].SetPartyNum(uiNum);

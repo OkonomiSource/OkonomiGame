@@ -1,4 +1,6 @@
 #pragma once
+#include"Party.h"
+
 
 enum MODENUM {
 
@@ -15,14 +17,8 @@ enum MODENUM {
 class CMode {
 
 private:
-
-	// 現在のモード番号
-	unsigned int uiMode;
-	// 前回のモード番号(画面遷移時用)
-	unsigned int uiBeforeMode;
-
-	// 共通フォントハンドルID受取用変数(あとで消すかも)
-	int iDbgFontHandle;
+	CParty *CTEAM = NULL;
+	unsigned int uiCTEAMMem = 0;
 
 protected:
 public:
@@ -36,20 +32,26 @@ public:
 	CMode();
 	~CMode();
 
-	// 場面遷移用関数
-	void ChangeModeNum(unsigned int Num);
-
-	// 現在の場面の番号を返す
-	unsigned int GetModeNum();
-
-	// メイン関数にフォントを設定してもらう
-	void SetFont(int iFont);
-
 	// メインモード処理
 	void MapMode();
 	void BattleMode();
 	void Run();
 
+};
 
+class MapMode :public CMode
+{
+//	変数----------------------------------------------------------------
+private:
+protected:
+public:
 
+//	関数----------------------------------------------------------------
+private:
+protected:
+public:
+	MapMode();
+	~MapMode();
+
+	void Run();
 };

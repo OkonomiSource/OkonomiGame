@@ -1,8 +1,8 @@
 #include "Character.h"
 #include "dxlib.h"
 
-CCharacter::CCharacter(){
-	
+void CCharacter::SetCharacterDefaultInfo()
+{
 	sStatus.uiLv = 1;
 
 	// 経験値
@@ -32,7 +32,8 @@ CCharacter::CCharacter(){
 	// TP
 	sStatus.uiTP = 1;
 
-	for (int i = 0; i < FULLSKILL ; i++) {
+	for (int i = 0; i < FULLSKILL; i++)
+	{
 
 		sSkill[i].stSkillName = "";
 		sSkill[i].iPower = 0;
@@ -42,17 +43,65 @@ CCharacter::CCharacter(){
 		sSkill[i].iTypeB = B_NON;
 
 	}
+}
 
+
+// コンストラクタ
+CCharacter::CCharacter(){
+	
+	this->SetCharacterDefaultInfo();
+}
+
+//　デストラクタ
+CCharacter::~CCharacter()
+{
 
 }
 
-CCharacter::~CCharacter() {
+// 個別のキャラ情報を設定
+bool CCharacter::SetCharacterInfo(unsigned int uiChara)
+{
+	bool blResult = TRUE;
 
+	SetCharacterDefaultInfo();
 
+	switch (uiChara)
+	{
+	case MIKATSU:
+		this->stCharaName[0] = "二条";
+		this->stCharaName[0] = "ミカツ";
 
+		this->stKanaCharaName[0] = "ニジョウ";
+		this->stKanaCharaName[0] = "ミカツ";
+
+		SetCharaImage("image/Character/Mikatsu/Splitted Image 4-1.png");
+
+		SetPartyNum(0);
+
+		break;
+	case SUZUKA:
+		this->stCharaName[0] = "日向宮";
+		this->stCharaName[0] = "涼花";
+
+		this->stKanaCharaName[0] = "ヒナミヤ";
+		this->stKanaCharaName[0] = "スズカ";
+
+		SetCharaImage("image/Character/Suzuka/Splitted Image 4-1.png");
+		
+		SetPartyNum(1);
+		
+		break;
+	default:
+		blResult = FALSE;
+		break;
+	}
+
+	return blResult;
 }
 
-bool CCharacter::SetCharaImage(const char dir[]) {
+// 画像セット
+bool CCharacter::SetCharaImage(const char dir[])
+{
 
 	// ハンドルIDが未設定状態であれば
 	if (iGraphichandle == 0)
@@ -74,9 +123,6 @@ bool CCharacter::SetCharaImage(const char dir[]) {
 			GetGraphSize(iGraphichandle, &iGraphicWidth, &iGraphicHeight);
 			return TRUE;
 		}
-
-
-
 	}
 
 	// ハンドルIDが設定されているのに呼び出されたら
@@ -87,6 +133,26 @@ bool CCharacter::SetCharaImage(const char dir[]) {
 	}
 }
 
+void CCharacter::SetPartyNum(unsigned int Num)
+{
+	// パーティの最大人数までの番号であれば
+	if (Num < MAX_PARTY_MEM)
+	{
+		// その値をパーティ内番号に設定
+		uiPartyNum = Num;
+	}
+
+	else
+	{
+		return;
+	}
+}
+
+std::string CCharacter::GetCharaName()
+{
+	return stCharaName[1];
+}
+
 // 描画先座標取得用関数 X
 // x:ポジション番号 
 int CCharacter::GetPositionX(int x)
@@ -94,16 +160,10 @@ int CCharacter::GetPositionX(int x)
 	switch (x)
 	{
 	case 0:
-		return PositionNum[0][0];
-		break;
 	case 1:
-		return PositionNum[1][0];
-		break;
 	case 2:
-		return PositionNum[2][0];
-		break;
 	case 3:
-		return PositionNum[3][0];
+		return PositionNum[x][0];
 		break;
 	default:
 		return -1;
@@ -119,16 +179,10 @@ int CCharacter::GetPositionY(int y)
 	switch (y)
 	{
 	case 0:
-		return PositionNum[0][1];
-		break;
 	case 1:
-		return PositionNum[1][1];
-		break;
 	case 2:
-		return PositionNum[2][1];
-		break;
 	case 3:
-		return PositionNum[3][1];
+		return PositionNum[y][1];
 		break;
 	default:
 		return -1;
@@ -147,8 +201,8 @@ bool CCharacter::DrawHPBar()
 	// 体力バー左上の座標
 	// x座標 = キャラ画像の左上頂点のx座標
 	// y座標 = キャラ画像の左上頂点のy座標 + キャラ画像の高さ + 補正値
-	int ix1 = GetPositionX(iPartyNum);
-	int iy1 = GetPositionY(iPartyNum) + iGraphicHeight;
+	int ix1 = GetPositionX(uiPartyNum);
+	int iy1 = GetPositionY(uiPartyNum) + iGraphicHeight;
 
 	// 体力バー右下の座標
 	// x座標 = ix1 + キャラ画像の横幅
@@ -232,8 +286,8 @@ bool CCharacter::DrawTPBar()
 	// TPバー左上の座標
 	// x座標 = キャラ画像の左上頂点のx座標
 	// y座標 = キャラ画像の左上頂点のy座標 + キャラ画像の高さ + HPバーの縦幅
-	int ix1 = GetPositionX(iPartyNum);
-	int iy1 = GetPositionY(iPartyNum) + iGraphicHeight + iHPBarHeight;
+	int ix1 = GetPositionX(uiPartyNum);
+	int iy1 = GetPositionY(uiPartyNum) + iGraphicHeight + iHPBarHeight;
 
 	// 体力バー右下の座標
 	// x座標 = ix1 + キャラ画像の横幅
@@ -310,7 +364,7 @@ bool CCharacter::DrawTPBar()
 
 bool CCharacter::DrawCharaImage() {
 
-	if (DrawGraph(GetPositionX(iPartyNum), GetPositionY(iPartyNum), iGraphichandle, TRUE) == -1) {
+	if (DrawGraph(GetPositionX(uiPartyNum), GetPositionY(uiPartyNum), iGraphichandle, TRUE) == -1) {
 
 		OutputDebugString("Error: CCharacter::DrawCharaImage DrawGraph()");
 		return FALSE;

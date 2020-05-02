@@ -4,6 +4,16 @@
 // 持てるスキルの最大数
 #define FULLSKILL 8
 
+// パーティの最大人数
+#define MAX_PARTY_MEM 4
+
+enum CHARALIST
+{
+	SUZUKA = 0,
+	MIKATSU
+
+};
+
 class CCharacter
 {
 
@@ -44,7 +54,7 @@ protected:
 	int iGraphicHeight = 0;
 
 	// パーティ内の番号
-	int iPartyNum = 0;
+	unsigned int uiPartyNum = 0;
 
 	// 画像描画用x座標
 	int iPositionX = 0;
@@ -68,10 +78,23 @@ public:
 	CCharacter();
 	// デストラクタ
 	~CCharacter();
+
+	// デフォルトのキャラ情報を設定
+	void SetCharacterDefaultInfo();
+
+	// 個別のキャラ情報を設定
+	bool SetCharacterInfo(unsigned int uiChara);
+
 	// 画像セット
 	bool SetCharaImage(const char dir[]);
 
+	// パーティ内での場所を設定する関数
+	void SetPartyNum(unsigned int Num);
+
 	// 計算処理用関数-----------------------
+
+	// 名前取得用関数
+	std::string GetCharaName();
 
 	// 描画先座標取得用関数 X
 	int GetPositionX(int x);
@@ -87,64 +110,6 @@ public:
 	bool DrawTPBar();
 
 	// キャラ画像描画
-	bool DrawCharaImage();
-
-};
-
-// 涼花さんクラス--------------------------------------------------------------------------------------
-class CSuzuka : public CCharacter
-{
-
-private:
-
-
-protected:
-
-public:
-
-
-private:
-
-protected:
-
-public:
-	// コンストラクタ
-	CSuzuka();
-	// デストラクタ
-	~CSuzuka();
-	// 画像セット
-	bool SetCharaImage();
-	// 画像描画
-	bool DrawCharaImage();
-
-
-};
-
-// ミカツさんクラス--------------------------------------------------------------------------------------
-
-class CMikatsu : public CCharacter
-{
-
-private:
-
-
-protected:
-
-public:
-
-
-private:
-
-protected:
-
-public:
-	// コンストラクタ
-	CMikatsu();
-	// デストラクタ
-	~CMikatsu();
-	// 画像セット
-	bool SetCharaImage();
-	// 画像描画
 	bool DrawCharaImage();
 
 };
