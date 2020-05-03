@@ -5,7 +5,7 @@
 
 // 定数定義---------------------------------------------------------
 
-#define DEFAULT_FONT_SIZE 18
+#define FONT_SIZE_DEFAULT 18
 
 // グローバル変数---------------------------------------------------
 int iDefaultfontHandle = 0;
@@ -45,7 +45,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR IpCmdLine
 	AddFontResourceEx("ロゴたいぷゴシック.otf", FR_PRIVATE, NULL);
 	
 	// 読み込んだ.otfファイル内のフォント名、フォントサイズ フォントの太さ、フォントのタイプ
-	iDefaultfontHandle = CreateFontToHandle("07ロゴたいぷゴシック7", DEFAULT_FONT_SIZE, 1, DX_FONTTYPE_NORMAL, DX_CHARSET_DEFAULT);
+	iDefaultfontHandle = CreateFontToHandle("07ロゴたいぷゴシック7", FONT_SIZE_DEFAULT, 1, DX_FONTTYPE_NORMAL, DX_CHARSET_DEFAULT);
 
 	// 実体の生成
 	// 画面クラス

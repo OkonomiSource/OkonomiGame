@@ -69,10 +69,10 @@ bool CCharacter::SetCharacterInfo(unsigned int uiChara)
 	{
 	case MIKATSU:
 		this->stCharaName[0] = "二条";
-		this->stCharaName[0] = "ミカツ";
+		this->stCharaName[1] = "ミカツ";
 
 		this->stKanaCharaName[0] = "ニジョウ";
-		this->stKanaCharaName[0] = "ミカツ";
+		this->stKanaCharaName[1] = "ミカツ";
 
 		SetCharaImage("image/Character/Mikatsu/Splitted Image 4-1.png");
 
@@ -81,10 +81,10 @@ bool CCharacter::SetCharacterInfo(unsigned int uiChara)
 		break;
 	case SUZUKA:
 		this->stCharaName[0] = "日向宮";
-		this->stCharaName[0] = "涼花";
+		this->stCharaName[1] = "涼花";
 
 		this->stKanaCharaName[0] = "ヒナミヤ";
-		this->stKanaCharaName[0] = "スズカ";
+		this->stKanaCharaName[1] = "スズカ";
 
 		SetCharaImage("image/Character/Suzuka/Splitted Image 4-1.png");
 		

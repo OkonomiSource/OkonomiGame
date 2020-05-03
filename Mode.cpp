@@ -5,7 +5,16 @@
 
 // inputKey()内で使用
 // キーが入力された瞬間かどうかを判定するための変数
-int key[256]; // 0:入力されていない 1:入力された瞬間 2:入力されている
+int key[256] = {}; // 0:入力されていない 1:入力された瞬間 2:入力されている
+
+// static変数--------------------------------------------------------------------
+
+// サブクラスのインスタンスを格納する変数
+// マップモードのインスタンス
+static CMapMode* pCMapMode = NULL;
+
+// バトルモードのインスタンス
+static CBattleMode* pCBattleMode = NULL;
 
 // 現在の画面モード番号
 // enum MODENUM{}内で設定している定数を使用すること
@@ -26,7 +35,7 @@ static CBackGround* CBG = NULL;
 // 2:	初回以降
 static unsigned int uiFirstTime = 0;
 
-// extern--------------------------------------------------------------------
+// extern------------------------------------------------------------------------
 
 // デフォルトフォントのハンドルID
 // main.cppのグローバル領域で定義
@@ -70,7 +79,7 @@ void inputKey() {
 	}
 }
 
-// CModeクラスのメソッド----------------------------------------------------------------
+// CModeクラスのメソッド-------------------------------------------------------------------------------------------------------
 
 CMode::CMode()
 {
@@ -82,150 +91,231 @@ CMode::~CMode()
 
 }
 
-// メイン処理------------------------------------------------------------------------------------------------------------------
-// 通常マップ画面
-
-// できること:
-// ・マップ上を移動する
-// ・メニュー画面を呼び出す
-// ・ほかのマップに移動する
-// ・ミッションを選択する
-
-void CMode::MapMode()
+void CMode::ModeEnd()
 {
-	// 遷移後初回の呼び出しであれば
-	 if (uiFirstTime == 0)
+	// 初回限定スイッチを初期状態に設定
+	uiFirstTime = 0;
+
+	// 今描画しているものを消して
+	ClearDrawScreen();
+
+	// 描画に使った画像はメモリから開放する
+	CBG->~CBackGround();
+}
+
+// Run関数
+// モードの状態に応じた処理関数を呼び出す
+// メイン関数にはこれだけ置いて動くようにしたい
+// キー入力の確認はメイン関数で行う
+
+void CMode::Run()
+{
+	// キーボードの入力を確認してから各モード中の処理に移る。
+	inputKey();
+
+	switch (uiMode)
 	{
-		// 初回限定スイッチオン
-		uiFirstTime = 1;
+	case MODE_MAP:
+		if (pCMapMode == NULL)
+		{
+			pCMapMode = new CMapMode();
+		}
+		pCMapMode->Run();
+		break;
+
+	case MODE_BATTLE:
+		if (pCBattleMode == NULL)
+		{
+			pCBattleMode = new CBattleMode();
+		}
+		pCBattleMode->Run();
+		break;
+
+	default:
+		OutputDebugString("Error occured:	CMode::Run(): Unacceptable Mode Number.");
+		break;
+
 	}
 
+	return;
+}
+
+// CMapModeクラスのメソッド----------------------------------------------------------------
+
+// コンストラクタ
+CMapMode::CMapMode()
+{
+
+}
+
+// デストラクタ
+CMapMode::~CMapMode()
+{
+
+}
+
+void CMapMode::ModeStartSet()
+{
+	// 背景クラス
+	CBG = new CBackGround(GROUND);
+}
+
+void CMapMode::ModeStartDraw()
+{
+	// 背景画像を描写
+	CBG->DrawBackGround();
+
+	// FOR DBG
+	DrawStringToHandle(0, 0, "メイン画面です\n", 0xFFFFFF, iDefaultfontHandle);
+}
+
+void CMapMode::ModeEnd()
+{
+	// 通常の終了処理を行う
+	CMode::ModeEnd();
+}
+
+// メイン処理-----------------------------------------------------------
+// マップ画面の描写を行う
+// できること:
+// ・マップを切り替えて移動する
+// ・メニュー画面を呼び出す
+// ・表示されているマップからミッションを選択する
+void CMapMode::Run()
+{
 	// 計算-------------------------------------------------------------
 
-	// 処理開始前のモード番号を格納しておく
-	uiBeforeMode = uiMode;
+	// キーボードの入力を処理-------------------------------------------
 
 	// 画面遷移処理
-
+	// 各画面モード毎に異なるため各サブクラスで独自に実装
+	// もしスペースキーが押されたら(後で条件は変更すると思う)
 	if (key[KEY_INPUT_SPACE] == 1)
 	{
 		// 画面の番号を更新
 		uiMode = MODE_BATTLE;
 	}
 
-	// 描画-------------------------------------------------------------
-
-	// の前に、もし画面遷移が発生していたらここで描画は行わないので
-	if (uiBeforeMode != uiMode)
+	// もしモードを切り替えるのであれば画面を遷移する処理を行う
+	if (uiMode != MODE_MAP)
 	{
-		// 初回限定スイッチを初期状態に設定
-		uiFirstTime = 0;
-
-		// 今描画しているものを消して
-		ClearDrawScreen();
-
-		// 描画に使った画像はメモリから開放して
-		CBG->~CBackGround();
-
+		// 終了処理をして
+		ModeEnd();
 		// 呼び出し元に処理を戻す
 		return;
 	}
 
-	// 画面遷移が起こっていなければ以下の処理を実施
-	// 描画は画面奥側のものから順に描写すること
-	else {
-
-		// 画面遷移後、一度だけ各インスタンスを生成
-		if (uiFirstTime == 1)
-		{
-			// 背景クラス
-			CBG = new CBackGround(GROUND);
-		}
-
-		// 背景画像を描写
-		CBG->DrawBackGround();
-
-		// FOR DBG
-		DrawStringToHandle(0, 0, "メイン画面です\n", 0xFFFFFF, iDefaultfontHandle);
+	// 遷移後最初の呼び出しならば、
+	else if (uiFirstTime == 0)
+	{
+		// 初回呼び出し時の設定を行い
+		ModeStartSet();
+		// 初回用の描画処理をして
+		ModeStartDraw();
+		// 初回フラグをオフに設定する
+		uiFirstTime = 1;
 	}
 
-	// 初回限定処理が終了したら
-	if (uiFirstTime == 1)
+	// 初回以降の呼び出しならば
+	// 通常の描画を行う
+	else if (uiFirstTime == 1)
 	{
-		// 2に設定する
-		uiFirstTime = 2;
+		// 今は初回処理だけ
 	}
 
 }
 
-void CMode::BattleMode()
-{
-	// 遷移後初回の呼び出しであれば
-	if (uiFirstTime == 0)
-	{
-		// 初回限定スイッチオン
-		uiFirstTime = 1;
-	}
+// CBattleModeクラスのメソッド-----------------------------------------
 
+// コンストラクタ
+CBattleMode::CBattleMode()
+{
+
+}
+
+// デストラクタ
+CBattleMode::~CBattleMode()
+{
+
+}
+
+void CBattleMode::ModeStartSet()
+{
+	// 背景クラス作成(とりあえず川を描く)
+	CBG = new CBackGround(RIVER);
+
+	// パーティクラス作成
+	pCTEAM = new CParty();
+
+	// パーティにメンバーを登録
+	pCTEAM->SetMember(0, MIKATSU);
+	pCTEAM->SetMember(1, SUZUKA);
+
+	//メンバー登録が終わったらパーティの人数を算出し、値を格納
+	uiCTEAMMem = pCTEAM->GetMemberOfParty();
+}
+
+void CBattleMode::ModeStartDraw()
+{
+
+}
+
+void CBattleMode::ModeEnd()
+{
+	// 通常の終了処理を行う
+	CMode::ModeEnd();
+}
+
+void CBattleMode::Run()
+{
 	// 計算-------------------------------------------------------------
 
-	// 処理開始前のモード番号を格納しておく
-	uiBeforeMode = uiMode;
+	// キーボードの入力を処理-------------------------------------------
 
 	// 画面遷移処理
+	// 各画面モード毎に異なるため各サブクラスで独自に実装
+	// もしスペースキーが押されたら(後で条件は変更すると思う)
 	if (key[KEY_INPUT_SPACE] == 1)
 	{
 		// 画面の番号を更新
 		uiMode = MODE_MAP;
 	}
 
-	// 描画-------------------------------------------------------------
-
-	// の前に、もし画面遷移が発生していたらここで描画は行わないので
-	if (uiBeforeMode != uiMode)
+	// もしモードを切り替えるのであれば画面を遷移する処理を行う
+	if (uiMode != MODE_BATTLE)
 	{
-		// 初回限定スイッチを初期状態に設定
-		uiFirstTime = 0;
-
-		// 今描画しているものを消して
-		ClearDrawScreen();
-
-		// 描画に使った画像はメモリから開放して
-		CBG->~CBackGround();
-
-		//呼び出し元に処理を戻す
+		// 終了処理をして
+		ModeEnd();
+		// 呼び出し元に処理を戻す
 		return;
 	}
 
-	// 画面遷移が起こっていなければ以下の処理を実施
-	// 描画は画面奥側のものから順に描写すること
-	else {
+	// 遷移後最初の呼び出しならば、
+	else if (uiFirstTime == 0)
+	{
+		// 初回呼び出し時の設定を行い
+		ModeStartSet();
+		// 初回用の描画処理をして
+		ModeStartDraw();
+		// 初回フラグをオフに設定する
+		uiFirstTime = 1;
+	}
 
-		// 画面遷移後、一度だけ各インスタンスを生成
-		if (uiFirstTime == 1)
-		{
-			CBG = new CBackGround(RIVER);
-			
-			// パーティクラス作成
-			CTEAM = new CParty();
-
-			// パーティにメンバーを登録
-			CTEAM->SetMember(0, MIKATSU);
-			CTEAM->SetMember(1, SUZUKA);
-
-			//メンバー登録が終わったらパーティの人数を算出し、値を格納
-			uiCTEAMMem = CTEAM->GetMemberOfParty();
-		}
+	// 初回以降の呼び出しならば
+	// 通常の描画を行う
+	else if (uiFirstTime == 1)
+	{
 		// 背景描画
 		CBG->DrawBackGround();
 
 		// キャラクター描画
 		// 改修予定あり
-		for (unsigned int i = 0; i < uiCTEAMMem; i++) {
+		for (unsigned int i = 0; i < uiCTEAMMem; i++)
+		{
 
-			CTEAM->GetMember(i).DrawCharaImage();
-			CTEAM->GetMember(i).DrawHPBar();
-			CTEAM->GetMember(i).DrawTPBar();
+			pCTEAM->GetMember(i).DrawCharaImage();
+			pCTEAM->GetMember(i).DrawHPBar();
+			pCTEAM->GetMember(i).DrawTPBar();
 
 		}
 
@@ -238,124 +328,7 @@ void CMode::BattleMode()
 		{
 			DrawStringToHandle(20, 375 + i * 18, "極天脚！\n", 0xFFFFFF, iDefaultfontHandle);
 		}
-	}
 
-	// 初回限定処理が終了したら
-	if (uiFirstTime == 1)
-	{
-		// 2に設定する
-		uiFirstTime = 2;
 	}
 
 }
-
-// Run関数
-// モードの状態に応じた処理関数を呼び出す
-// メイン関数にはこれだけ置いて動くようにしたい
-// キー入力の確認はメイン関数で行う
-void CMode::Run()
-{
-	// キーボードの入力を確認してから各モード中の処理に移る。
-	inputKey();
-
-	switch (uiMode)
-	{
-	case MODE_MAP:
-
-		this->MapMode();
-		break;
-
-	case MODE_BATTLE:
-
-		this->BattleMode();
-		break;
-
-	default:
-		OutputDebugString("Error occured:	CMode::Run(): Unacceptable Mode Number.");
-		break;
-
-	}
-
-	return;
-}
-
-//// CMapModeクラスのメソッド----------------------------------------------------------------
-//
-//// コンストラクタ
-//MapMode::MapMode()
-//{
-//
-//}
-//
-//// デストラクタ
-//MapMode::MapMode()
-//{
-//
-//}
-//
-//void MapMode::Run()
-//{
-//	// 遷移後初回の呼び出しであれば
-//	if (uiFirstTime == 0)
-//	{
-//		// 初回限定スイッチオン
-//		uiFirstTime = 1;
-//	}
-//
-//	// 計算-------------------------------------------------------------
-//
-//	// 処理開始前のモード番号を格納しておく
-//	uiBeforeMode = uiMode;
-//
-//	// 画面遷移処理
-//
-//	if (key[KEY_INPUT_SPACE] == 1)
-//	{
-//		// 画面の番号を更新
-//		uiMode = MODE_BATTLE;
-//	}
-//
-//	// 描画-------------------------------------------------------------
-//
-//	// の前に、もし画面遷移が発生していたらここで描画は行わないので
-//	if (uiBeforeMode != uiMode)
-//	{
-//		// 初回限定スイッチを初期状態に設定
-//		uiFirstTime = 0;
-//
-//		// 今描画しているものを消して
-//		ClearDrawScreen();
-//
-//		// 描画に使った画像はメモリから開放して
-//		CBG->~CBackGround();
-//
-//		// 呼び出し元に処理を戻す
-//		return;
-//	}
-//
-//	// 画面遷移が起こっていなければ以下の処理を実施
-//	// 描画は画面奥側のものから順に描写すること
-//	else {
-//
-//		// 画面遷移後、一度だけ各インスタンスを生成
-//		if (uiFirstTime == 1)
-//		{
-//			// 背景クラス
-//			CBG = new CBackGround(GROUND);
-//		}
-//
-//		// 背景画像を描写
-//		CBG->DrawBackGround();
-//
-//		// FOR DBG
-//		DrawStringToHandle(0, 0, "メイン画面です\n", 0xFFFFFF, iDefaultfontHandle);
-//	}
-//
-//	// 初回限定処理が終了したら
-//	if (uiFirstTime == 1)
-//	{
-//		// 2に設定する
-//		uiFirstTime = 2;
-//	}
-//
-//}

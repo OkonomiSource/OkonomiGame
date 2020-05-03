@@ -1,7 +1,7 @@
 #pragma once
 #include"Party.h"
 
-
+// 画面モードの番号
 enum MODENUM {
 
 	// バトルに入る前のメイン場面(マップを想定)
@@ -12,34 +12,45 @@ enum MODENUM {
 
 };
 
-// モードクラス
-// 各画面モードを管理し、モード番号に応じた処理を実行する
+// クラス宣言------------------------------------------------------------------
+
+class CMode;
+class CMapMode;
+class CBattleMode;
+
+// モードクラス----------------------------------------------------------------
+// モード番号に応じて処理を行うサブクラスのインスタンスを獲得し、処理を実行する
+
 class CMode {
 
 private:
-	CParty *CTEAM = NULL;
-	unsigned int uiCTEAMMem = 0;
-
 protected:
 public:
 
 
 private:
-
 protected:
 public:
 
+	// コンストラクタ
 	CMode();
+	// デストラクタ
 	~CMode();
 
-	// メインモード処理
-	void MapMode();
-	void BattleMode();
+	// 初回のみの描画
+	void ModeStartDraw();
+
+	// モード終了処理用関数
+	void ModeEnd();
+
+	// メイン処理実行用関数
+	// 画面モードに合わせて処理を行う
 	void Run();
 
 };
 
-class MapMode :public CMode
+// マップモードクラス----------------------------------------------------------
+class CMapMode :public CMode
 {
 //	変数----------------------------------------------------------------
 private:
@@ -50,8 +61,57 @@ public:
 private:
 protected:
 public:
-	MapMode();
-	~MapMode();
 
+	// コンストラクタ
+	CMapMode();
+	// デストラクタ
+	~CMapMode();
+
+	// 初回処理の計算
+	void ModeStartSet();
+	// 初回処理の描画
+	void ModeStartDraw();
+
+	// モード終了処理用関数
+	void ModeEnd();
+
+	// メイン処理
 	void Run();
+};
+
+// バトルモードクラス----------------------------------------------------------
+class CBattleMode :public CMode
+{
+	//	変数----------------------------------------------------------------
+private:
+	// バトルするパーティを格納する変数
+	CParty* pCTEAM = NULL;
+
+	// パーティの人数を格納する変数
+	unsigned int uiCTEAMMem = 0;
+
+protected:
+public:
+
+	//	関数----------------------------------------------------------------
+private:
+protected:
+public:
+
+	// コンストラクタ
+	CBattleMode();
+	// デストラクタ
+	~CBattleMode();
+
+	// 初回処理の計算
+	void ModeStartSet();
+	// 初回処理の描画
+	void ModeStartDraw();
+
+	// モード終了処理用関数
+	void ModeEnd();
+
+	// メイン処理
+	void Run();
+
 };
