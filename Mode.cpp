@@ -11,10 +11,13 @@ int key[256] = {}; // 0:入力されていない 1:入力された瞬間 2:入力されている
 
 // サブクラスのインスタンスを格納する変数
 // マップモードのインスタンス
-static CMapMode* pCMapMode = NULL;
+static CMapMode *pCMapMode = NULL;
+
+// メニューモードのインスタンス
+static CMenuMode *pCMenuMode = NULL;
 
 // バトルモードのインスタンス
-static CBattleMode* pCBattleMode = NULL;
+static CBattleMode *pCBattleMode = NULL;
 
 // 現在の画面モード番号
 // enum MODENUM{}内で設定している定数を使用すること
@@ -91,13 +94,15 @@ CMode::~CMode()
 
 }
 
+void CMode::KeyControl()
+{
+
+}
+
 void CMode::ModeEnd()
 {
 	// 初回限定スイッチを初期状態に設定
 	uiFirstTime = 0;
-
-	// 今描画しているものを消して
-	ClearDrawScreen();
 
 	// 描画に使った画像はメモリから開放する
 	CBG->~CBackGround();
@@ -110,6 +115,9 @@ void CMode::ModeEnd()
 
 void CMode::Run()
 {
+	// 前回処理で描画したものを消し
+	ClearDrawScreen();
+
 	// キーボードの入力を確認してから各モード中の処理に移る。
 	inputKey();
 
@@ -122,6 +130,15 @@ void CMode::Run()
 		}
 		pCMapMode->Run();
 		break;
+
+	case MODE_MENU:
+		if (pCMenuMode == NULL)
+		{
+			pCMenuMode = new CMenuMode();
+		}
+		pCMenuMode->Run();
+		break;
+
 
 	case MODE_BATTLE:
 		if (pCBattleMode == NULL)
@@ -154,25 +171,57 @@ CMapMode::~CMapMode()
 
 }
 
+// キーボード入力に対する処理
+// E: メニュー画面モードへの移動
+// SPACE: バトル画面モードへの移動
+void CMapMode::KeyControl()
+{
+	// 押されているキーは1つしか読み込まない仕様とする。
+	// 優先度の高い処理を追加するときは上に追加すること。
+
+	// スペースキーが押されたら(後で処理は変更すると思う)
+	if (key[KEY_INPUT_SPACE] == 1)
+	{
+		// バトルモードに遷移
+		uiMode = MODE_BATTLE;
+
+		// 終了処理を行う。
+		ModeEnd();
+	}
+
+	// Eキーが押されたら
+	else if (key[KEY_INPUT_E] == 1)
+	{
+		// メニューモードへ移動
+		uiMode = MODE_MENU;
+
+		// マップ画面は描画したままにするので、ModeEnd()は呼ばない。
+		// 初回の描画をするために初回限定スイッチだけ入れる。
+		uiFirstTime = 0;
+	}
+
+}
+
 void CMapMode::ModeStartSet()
 {
 	// 背景クラス
 	CBG = new CBackGround(GROUND);
 }
 
-void CMapMode::ModeStartDraw()
-{
-	// 背景画像を描写
-	CBG->DrawBackGround();
-
-	// FOR DBG
-	DrawStringToHandle(0, 0, "メイン画面です\n", 0xFFFFFF, iDefaultfontHandle);
-}
-
 void CMapMode::ModeEnd()
 {
 	// 通常の終了処理を行う
 	CMode::ModeEnd();
+}
+
+void CMapMode::Draw()
+{
+	// 背景画像を描画
+	CBG->DrawBackGround();
+
+	// FOR DBG
+	DrawStringToHandle(0, 0, "メイン画面です\n", 0xFFFFFF, iDefaultfontHandle);
+
 }
 
 // メイン処理-----------------------------------------------------------
@@ -187,20 +236,13 @@ void CMapMode::Run()
 
 	// キーボードの入力を処理-------------------------------------------
 
-	// 画面遷移処理
-	// 各画面モード毎に異なるため各サブクラスで独自に実装
-	// もしスペースキーが押されたら(後で条件は変更すると思う)
-	if (key[KEY_INPUT_SPACE] == 1)
-	{
-		// 画面の番号を更新
-		uiMode = MODE_BATTLE;
-	}
+	KeyControl();
 
-	// もしモードを切り替えるのであれば画面を遷移する処理を行う
+	// もしモードを切り替えるのであれば
+	// この関数内での処理はここまで。
+	// 必要に応じてKeyControl()内でModeEnd()を行うこと。
 	if (uiMode != MODE_MAP)
 	{
-		// 終了処理をして
-		ModeEnd();
 		// 呼び出し元に処理を戻す
 		return;
 	}
@@ -210,22 +252,113 @@ void CMapMode::Run()
 	{
 		// 初回呼び出し時の設定を行い
 		ModeStartSet();
-		// 初回用の描画処理をして
-		ModeStartDraw();
 		// 初回フラグをオフに設定する
 		uiFirstTime = 1;
 	}
 
-	// 初回以降の呼び出しならば
 	// 通常の描画を行う
-	else if (uiFirstTime == 1)
-	{
-		// 今は初回処理だけ
-	}
+
+	Draw();
 
 }
 
-// CBattleModeクラスのメソッド-----------------------------------------
+// CMenuModeクラスのメソッド--------------------------------------------------------------
+
+// コンストラクタ
+CMenuMode::CMenuMode()
+{
+	astMenuList[0] = "編成";
+	astMenuList[1] = "アイテム";
+	astMenuList[2] = "セーブ";
+
+	iMenuBackGraphicHandle[NON_SELECTED] = LoadGraph("image/Window/button_blue.png");
+	iMenuBackGraphicHandle[SELECTED] = LoadGraph("image/Window/button_blue_hakkou.png");
+}
+
+// デストラクタ
+CMenuMode::~CMenuMode()
+{
+
+}
+
+// キーボード入力に対する処理
+// E: メニュー画面モードへの移動
+void CMenuMode::KeyControl()
+{
+	// 押されているキーは1つしか読み込まない仕様とする。
+	// 優先度の高い処理を追加するときは上に追加すること。
+
+	// Eキーが押されたら
+	if (key[KEY_INPUT_E] == 1)
+	{
+		// マップモードへ移動
+		uiMode = MODE_MAP;
+
+		// マップ画面は描画したままにするので、ModeEnd()は呼ばない。
+		// 初回の描画をするために初回限定スイッチだけ入れる。
+		uiFirstTime = 0;
+	}
+}
+
+void CMenuMode::ModeStartSet()
+{
+
+}
+
+void CMenuMode::ModeEnd()
+{
+	// 通常の終了処理を行う
+	CMode::ModeEnd();
+}
+
+void CMenuMode::Draw()
+{
+	// 背景はCMapModeクラスの描画になる
+	pCMapMode->Draw();
+
+	DrawGraph(0, 0, iMenuBackGraphicHandle[NON_SELECTED], TRUE);
+	
+	DrawStringToHandle(70, 30, "メニュー\n", 0xFFFFFF, iDefaultfontHandle);
+
+}
+
+// メイン処理-----------------------------------------------------------
+// マップ画面の描写を行う
+// できること:
+// ・マップを切り替えて移動する
+// ・メニュー画面を呼び出す
+// ・表示されているマップからミッションを選択する
+void CMenuMode::Run()
+{
+	// 計算-------------------------------------------------------------
+
+	// キーボードの入力を処理-------------------------------------------
+	KeyControl();
+
+	// もしモードを切り替えるのであれば
+	// この関数内での処理はここまで。
+	// 必要に応じてKeyControl()内でModeEnd()を行うこと。
+	if (uiMode != MODE_MENU)
+	{
+		// 呼び出し元に処理を戻す
+		return;
+	}
+
+	// 遷移後最初の呼び出しならば、
+	else if (uiFirstTime == 0)
+	{
+		// 初回呼び出し時の設定を行い
+		ModeStartSet();
+		// 初回フラグをオフに設定する
+		uiFirstTime = 1;
+	}
+
+	// 通常の描画を行う
+	Draw();
+
+}
+
+// CBattleModeクラスのメソッド------------------------------------------------------------
 
 // コンストラクタ
 CBattleMode::CBattleMode()
@@ -255,15 +388,37 @@ void CBattleMode::ModeStartSet()
 	uiCTEAMMem = pCTEAM->GetMemberOfParty();
 }
 
-void CBattleMode::ModeStartDraw()
-{
-
-}
-
 void CBattleMode::ModeEnd()
 {
 	// 通常の終了処理を行う
 	CMode::ModeEnd();
+}
+
+void CBattleMode::Draw()
+{
+	// 背景描画
+	CBG->DrawBackGround();
+
+	// キャラクター描画
+	// 改修予定あり
+	for (unsigned int i = 0; i < uiCTEAMMem; i++)
+	{
+
+		pCTEAM->GetMember(i).DrawCharaImage();
+		pCTEAM->GetMember(i).DrawHPBar();
+		pCTEAM->GetMember(i).DrawTPBar();
+
+	}
+
+	// メッセージウィンドウ描画
+	int iMsgWindowHandle = LoadGraph("image/Window/msgbox_blue.png");
+	DrawExtendGraph(0, 350, 641, 481, iMsgWindowHandle, TRUE);
+
+	// メッセージ描画
+	for (int i = 0; i < 5; i++)
+	{
+		DrawStringToHandle(20, 375 + i * 18, "極天脚！\n", 0xFFFFFF, iDefaultfontHandle);
+	}
 }
 
 void CBattleMode::Run()
@@ -295,40 +450,10 @@ void CBattleMode::Run()
 	{
 		// 初回呼び出し時の設定を行い
 		ModeStartSet();
-		// 初回用の描画処理をして
-		ModeStartDraw();
 		// 初回フラグをオフに設定する
 		uiFirstTime = 1;
 	}
 
-	// 初回以降の呼び出しならば
 	// 通常の描画を行う
-	else if (uiFirstTime == 1)
-	{
-		// 背景描画
-		CBG->DrawBackGround();
-
-		// キャラクター描画
-		// 改修予定あり
-		for (unsigned int i = 0; i < uiCTEAMMem; i++)
-		{
-
-			pCTEAM->GetMember(i).DrawCharaImage();
-			pCTEAM->GetMember(i).DrawHPBar();
-			pCTEAM->GetMember(i).DrawTPBar();
-
-		}
-
-		// メッセージウィンドウ描画
-		int iMsgWindowHandle = LoadGraph("image/Window/msgbox_blue.png");
-		DrawExtendGraph(0, 350, 641, 481, iMsgWindowHandle, TRUE);
-
-		// メッセージ描画
-		for (int i = 0; i < 5; i++)
-		{
-			DrawStringToHandle(20, 375 + i * 18, "極天脚！\n", 0xFFFFFF, iDefaultfontHandle);
-		}
-
-	}
-
+	Draw();
 }

@@ -4,7 +4,6 @@
 #include"Mode.h"
 
 // 定数定義---------------------------------------------------------
-
 #define FONT_SIZE_DEFAULT 18
 
 // グローバル変数---------------------------------------------------
@@ -23,9 +22,6 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR IpCmdLine
 
 	// 画面の大きさの変更不可。
 	SetWindowSizeChangeEnableFlag(FALSE);
-
-	// 描画先を裏画面にする
-	SetDrawScreen(DX_SCREEN_BACK);
 
 	// 異常があった場合、終了
 	if (DxLib_Init() == -1)
@@ -54,6 +50,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR IpCmdLine
 	int a = GetJoypadNum();
 	printfDx("%d",a);
 
+	unsigned int uiGameCount = 0;
+
 	// ループ処理
 	for (;;)
 	{
@@ -61,14 +59,19 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR IpCmdLine
 		// キーの入力状態を走査する
 		// 描画--------------------------------------------------------------------
 
+		// まずは描画先を裏画面にする
+		SetDrawScreen(DX_SCREEN_BACK);
+
 		Scene->Run();
 
+		// FOR DBG
+		// ゲーム開始時からのカウント
+		uiGameCount++;
 
 		// 画面を更新する
 		// フルスクリーンモードの場合、表画面と裏画面を交換
 		// ウィンドウモードの場合、裏画面の内容を表画面にコピー
 		ScreenFlip();
-
 
 		// 特定の場所でループする時はProcessMessage()を呼び出すと安全。
 		// ウィンドウの×ボタンを押すと0以外の値を返す。
